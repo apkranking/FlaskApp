@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<!--
+	Dopetrope by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>TRR</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		{% raw %}
+		<link rel="stylesheet" href="analysisReport/assets/css/main.css">
+		
+		{% endraw %}
+	</head>
+	<body oncontextmenu="return false;" class="homepage is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<section id="header">
+
+					<!-- Logo -->
+						<h1><a href="index.html.jinja">
+						<img class="img-fluid d-block mx-auto" src="analysisReport/images/Logo2.JPG" alt="CDASH" width="200">
+						</a></h1>
+
+					<!-- Nav -->
+						<nav id="nav">
+							<ul>
+								<li><a href="index.html.jinja">Home</a></li>
+								<li><a href="people.html.jinja">People</a></li>
+								<li></li><a href="publications.html.jinja">Publications</a></li>
+								<li class="current"><a href="prototype.html.jinja">Prototype</a></li>
+								<li><a href="contact.html.jinja">Contact</a></li>
+							</ul>
+						</nav>
+
+					<!-- Banner -->
+						<section id="banner">
+							
+						</section>
+					<!-- Intro -->
+						<!-- Main -->
+								
+					<section id="main">
+						<form  action="/urlInsert" enctype="multipart/form-data" methods="POST">
+							<b><font size="5" color="Blue">Option#1</font><br>
+							App URL (Google Play Store):
+							<input type="text" name="appurl" value="Provide URL here..." style="font-size:20px; text-align:center; background-color:#AFAFBA;border: 2px solid white; border-radius: 4px;">
+							<br>
+							<input type="submit" value="Submit" style="height:60px;text-align:center;">
+							<br>
+							
+							<br>
+							<b><font size="5" color="Blue">Option#2</font>
+							<br>
+							Upload .apk or .xapk file here: 
+							<input type="file" name="file">
+							<input type="submit" value="Upload" style="height:60px;text-align:center;">
+				
+						</form> 
+					</section>
+				</section>
+				
+
+<!---footer -->
+				<div class="col-4 col-12-medium">
+								<section>
+									<header>
+									</header>
+									<center>
+									<ul class="supportby">
+										
+										<li><a class="icon fa-iupui" href="https://www.iupui.edu"><span class="label">IUPUI</span><img class="rounded-circle img-fluid d-block mx-auto" src="images/IUPUI.png" alt="IUPUI" width="100"></a></li>
+									</ul>
+									</center>
+								</section>
+							</div>
+							<div class="col-12">
+
+								<!-- Copyright -->
+									<div id="copyright">
+										<ul class="links">
+											<li>&copy; Untitled. All rights reserved.</li>
+										</ul>
+									</div>
+
+							</div>
+						</div>
+					</div>
+				</section>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.dropotron.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
