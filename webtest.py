@@ -28,11 +28,13 @@ import re
 #library for web app developement - Flask
 from jinja2 import Template
 from flask import Flask, redirect, url_for, render_template, request
-app = Flask(__name__, static_folder='static')
-UPLOAD_FOLDER = '/home/mitu/Downloads/pythonWeb-Flask/apkFiles'
-ALLOWED_EXTENSIONS = set(['apk', 'xapk'])
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+app = Flask(__name__, static_folder='static')
+app.config.from_object('config')
+
+CHROME_DRIVER_DIR = app.config['CHROME_DRIVER_DIR']
+DOWNLOAD_PATH = app.config['DOWNLOAD_PATH']
+APK_DIR_PATH = app.config['APK_DIR_PATH']
 
 @app.route("/")
 def index():
@@ -40,28 +42,24 @@ def index():
         tmpl = Template(f.read())
     return tmpl.render()
 
-
-
 @app.route("/apkCrawler", methods=['GET', 'POST'])
 def apkCrawler(pckgName):
     non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
-    chromedriver_loc = "/home/mitu/Downloads/pythonWeb-Flask/chromedriver"
-    os.environ["webdriver.chrome.driver"] = chromedriver_loc
+    os.environ["webdriver.chrome.driver"] = CHROME_DRIVER_DIR 
     
     options = webdriver.ChromeOptions() 
     options.add_experimental_option("prefs", {
-        "download.default_directory": "/home/mitu/Downloads/pythonWeb-Flask/downloadedApks",
+        "download.default_directory": CHROME_DRIVER_DIR,
         "download.prompt_for_download": False,
     })
     
     options.add_argument("--headless")
     
-    driver = webdriver.Chrome(executable_path=chromedriver_loc, chrome_options=options)
-    #driver = webdriver.Chrome(executable_path=chromedriver_loc)
+    driver = webdriver.Chrome(executable_path=CHROME_DRIVER_DIR, chrome_options=options)
     wait = WebDriverWait( driver, 10 )
 
     driver.command_executor._commands["send_command"] = ("POST", '/session/$sessionId/chromium/send_command')
-    params = {'cmd': 'Page.setDownloadBehavior', 'params': {'behavior': 'allow', 'downloadPath': "/home/mitu/Downloads/pythonWeb-Flask/downloadedApks"}}
+    params = {'cmd': 'Page.setDownloadBehavior', 'params': {'behavior': 'allow', 'downloadPath': DOWNLOAD_PATH}}
     command_result = driver.execute("send_command", params)
     
     driver.get('https://m.apkpure.com/search')
@@ -90,14 +88,14 @@ def dex2jar(apkName, pckgName):
     inputFilename = apkName
     outputFilename = pckgName + '.jar'
     try:
-        absInputpath = "/home/mitu/Downloads/pythonWeb-Flask/apkFiles/"
-        absOutputPath = "/home/mitu/Downloads/pythonWeb-Flask/bytecodes/"
+        absInputpath = DOWNLOAD_PATH
+        absOutputPath = DOWNLOAD_PATH
         InputPath = absInputpath + inputFilename
         OutputPath =  absOutputPath + outputFilename
         #print(InputPath)
         #print(OutputPath)
         if(os.path.exists(InputPath)):
-            call(['sh', '/home/mitu/Downloads/finalizeCode-INTERNAL-EVIDENCES/allAlgoIn1platform/dex2jar/d2j-dex2jar.sh', '-f', InputPath, '-o', OutputPath])
+            call(['sh', app.config['DEX2JAR'], '-f', InputPath, '-o', OutputPath])
     except Exception:
         print("Exception!!")
         
@@ -107,14 +105,14 @@ def runFindbugs(pckgName):
     inputFilename = pckgName +'.jar'
     outputFilename = pckgName + '.xml'
     try:
-        absInputpath = "/home/mitu/Downloads/pythonWeb-Flask/bytecodes/"
-        absOutputPath = "/home/mitu/Downloads/pythonWeb-Flask/analysisReport/"
+        absInputpath = app.config['BYTECODE_DIR'] 
+        absOutputPath = app.config['ANALYSIS_REPORT_DIR']
         InputPath = absInputpath + inputFilename
         OutputPath =  absOutputPath + outputFilename
         #print(InputPath)
         #print(OutputPath)
         if(os.path.exists(InputPath)):
-            call(['/home/mitu/Downloads/findbugs-3.0.1/bin/./findbugs', '-low', '-xml', '-output', OutputPath, InputPath])
+            call([app.config['FINDBUGS'], '-low', '-xml', '-output', OutputPath, InputPath])
     except Exception:
         print("Exception!!")
 
@@ -124,7 +122,7 @@ def parseAnalysisReport(pckgName):
     myFile2 = open('inputMultiAppData.txt', 'w')
     try:
         inputFilename = pckgName + '.xml'
-        absInputPath = "/home/mitu/Downloads/pythonWeb-Flask/analysisReport/"
+        absInputPath = app.config['ANALYSIS_REPORT_DIR']
         InputPath = absInputPath + inputFilename
         root = ET.parse(InputPath)
         bugInstances = root.findall('.//BugInstance')
@@ -300,8 +298,8 @@ def urlInsert():
     ''''----Internal Evidence Collection-------------'''
     apkCrawler(pckgName) #1 - Download apk file
     
-    dirpath = '/home/mitu/Downloads/pythonWeb-Flask/apkFiles/'
-    downloadDirPath = '/home/mitu/Downloads/pythonWeb-Flask/downloadedApks/'
+    dirpath = APK_DIR_PATH
+    downloadDirPath = DOWNLOAD_PATH
     filename = os.listdir(downloadDirPath)[0]
     
     new_file = pckgName
@@ -314,18 +312,19 @@ def urlInsert():
         new_file = os.path.join(dirpath, apkName)
     os.rename(old_file, new_file) 
     
-    dex2jar(apkName, pckgName) #2 - Preprocess the apk file to bytecode
-    runFindbugs(pckgName) #3 - run static analysis tool ; generate internal evidance
-    parseAnalysisReport(pckgName) #4
-    its = trustTuppleCalc(pckgName) #5 - will return internal evidance based trust score
-    rating = ((its[0] + its[2]) / (its[0] + its[1] + 2 * its[2]))*5
-    #print(its,file=sys.stderr)
-    
+    # TODO: Dex2Jar Not working so none of the methods work
+    # dex2jar(apkName, pckgName) #2 - Preprocess the apk file to bytecode
+    # runFindbugs(pckgName) #3 - run static analysis tool ; generate internal evidance
+    # parseAnalysisReport(pckgName) #4
+    # its = trustTuppleCalc(pckgName) #5 - will return internal evidance based trust score
+    # rating = ((its[0] + its[2]) / (its[0] + its[1] + 2 * its[2]))*5
+    # its = (1.0, 0, 0)
+
     ''''----External Evidence Collection-------------'''
     ets = extractReview(pckgName) #extract reviews from google play store
 
-    return "<html> <head> <title>APK Preprocessing</title></head> <body> <a  href='http://127.0.0.1:5000/'> Submit new job </a> <p>Download APK file from APKPure --- Done <br> Convert to bytecode --- Done <br> Static Analysis --- Done </p> <br> <br> <a href='/analysisReport/"+pckgName+".xml'>See the bug warning report (generated by FindBugs)</a> <br> <br><p>App package Name : "+pckgName+"<br><br>Internal evidance based Trust Score (B, D, U) = "+str(its)+"<br><br>Internal evidance based Rating (out of 5) = "+str(rating)+" </p></body> </html>"
-
+    # return "<html> <head> <title>APK Preprocessing</title></head> <body> <a  href='http://127.0.0.1:5000/'> Submit new job </a> <p>Download APK file from APKPure --- Done <br> Convert to bytecode --- Done <br> Static Analysis --- Done </p> <br> <br> <a href='/analysisReport/"+pckgName+".xml'>See the bug warning report (generated by FindBugs)</a> <br> <br><p>App package Name : "+pckgName+"<br><br>Internal evidance based Trust Score (B, D, U) = "+str(its)+"<br><br>Internal evidance based Rating (out of 5) = "+str(rating)+" </p></body> </html>"
+    return "<html><body>Done</body></html>"
     
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port =5000, debug=True)
